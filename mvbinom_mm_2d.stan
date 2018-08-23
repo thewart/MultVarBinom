@@ -27,15 +27,15 @@ functions {
 data {
   int N;    //total number of observations
   int M;    //number of groups
-  int D;    //number of dimensions
   int n[M]; //number of observations per group
   
-  matrix[D,N] Y;    //N D-dimensional data vectors
+  matrix[2,N] Y;    //N D-dimensional data vectors
 }
 
 transformed data {
-  matrix[D,D] YSS[M];
+  int D = 2; //hardcode
   int D2 = D*(D-1)/2;
+  matrix[D,D] YSS[M];
 
   {
     int start = 1;
