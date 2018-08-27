@@ -34,7 +34,7 @@ data {
   int D2;   //ugh wtf stan
   // int n[M]; //number of observations per group
   
-  matrix[D,N] Y;    //N D-dimensional data vectors
+  matrix[2,N] Y;    //N D-dimensional data vectors
 }
 
 transformed data {
@@ -43,8 +43,6 @@ transformed data {
   matrix[D,D2] Yset;
   matrix[D*(D-1)/2,D2] Xset;
     
-  // for (i in 1:D) D2 = D2*2; ##wtf stan
-
   for (i in 1:D) YSS[i] = sum(Y[i,:]);
   for (i in 1:N) XSS = XSS + interact(Y[:,i]);
   
