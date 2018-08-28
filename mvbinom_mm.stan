@@ -34,7 +34,7 @@ data {
   int D2;   //ugh wtf stan
   int n[M]; //number of observations per group
   
-  matrix[2,N] Y;    //N D-dimensional data vectors
+  matrix[D,N] Y;    //N D-dimensional data vectors
 }
 
 transformed data {

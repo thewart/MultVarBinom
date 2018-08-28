@@ -34,7 +34,7 @@ data {
   int D2;   //ugh wtf stan
   // int n[M]; //number of observations per group
   
-  matrix[2,N] Y;    //N D-dimensional data vectors
+  matrix[D,N] Y;    //N D-dimensional data vectors
 }
 
 transformed data {
@@ -87,8 +87,8 @@ transformed data {
     //   f2_raw[i] ~ normal(0,1);
     // }
     // 
-      f1 ~ normal(0,1.0);
-      f2 ~ normal(0,0.5);
+      // f1 ~ normal(0,1.0);
+      // f2 ~ normal(0,0.5);
     // f1_sigma ~ normal(0,1); 
     // f2_sigma ~ normal(0,1);
     }
