@@ -48,48 +48,15 @@ transformed data {
   
   Yset = create_Yset(D,D2);
   for (i in 1:D2) Xset[:,i] = interact(Yset[:,i]);
-  
-  // {
-    //   int start = 1;
-    //   for (i in 1:M) {
-      //     YSS[i] = Y[:,start:(start+n[i]-1)] * Y[:,start:(start+n[i]-1)]';
-      //     start = start + n[i];
-      //   }
-      // }
 }
     
-    parameters {
-    vector[D] f1;
-    vector[D*(D-1)/2] f2;
-    // vector<lower=0>[D] f1_sigma;
-    // vector<lower=0>[D2] f2_sigma;
-    // 
-    // vector[D] f1_raw[M];
-    // vector[D2] f2_raw[M];
-    }
-    
-    // transformed parameters {
-    //   vector[D] f1[M];
-    //   vector[D2] f2[M];
-    //     
-    //   for (i in 1:M) {
-    //     f1[i] = f1_mu + f1_raw[i].*f1_sigma;
-    //     f2[i] = f2_mu + f2_raw[i].*f2_sigma;
-    //   }
-    // }
-    
-    model {
-    // for (i in 1:M) {
-      real logZ = log_sum_exp(f1'*Yset + f2'*Xset);
-      target +=  YSS'*f1 + XSS'*f2 - N*logZ;
-    // target += multi_bernoulli_ss_lp(YSS,XSS,f1, f2, N);
-    //   f1_raw[i] ~ normal(0,1);
-    //   f2_raw[i] ~ normal(0,1);
-    // }
-    // 
-      // f1 ~ normal(0,1.0);
-      // f2 ~ normal(0,0.5);
-    // f1_sigma ~ normal(0,1); 
-    // f2_sigma ~ normal(0,1);
-    }
+parameters {
+  vector[D] f1;
+  vector[D*(D-1)/2] f2;
+}
+
+model {
+  real logZ = log_sum_exp(f1'*Yset + f2'*Xset);
+  target +=  YSS'*f1 + XSS'*f2 - N*logZ;
+}
     

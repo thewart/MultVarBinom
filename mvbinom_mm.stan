@@ -55,46 +55,38 @@ transformed data {
   Yset = create_Yset(D,D2);
   for (i in 1:D2) Xset[:,i] = interact(Yset[:,i]);
   
-  // {
-    //   int start = 1;
-    //   for (i in 1:M) {
-      //     YSS[i] = Y[:,start:(start+n[i]-1)] * Y[:,start:(start+n[i]-1)]';
-      //     start = start + n[i];
-      //   }
-      // }
+}
+
+parameters {
+  vector[D] f1_mu;
+  vector[D*(D-1)/2] f2_mu;
+  vector<lower=0>[D] f1_sigma;
+  vector<lower=0>[D2] f2_sigma;
+
+  vector[D] f1_raw[M];
+  vector[D2] f2_raw[M];
 }
     
-    parameters {
-    vector[D] f1[M];
-    vector[D*(D-1)/2] f2[M];
-    // vector<lower=0>[D] f1_sigma;
-    // vector<lower=0>[D2] f2_sigma;
-    // 
-    // vector[D] f1_raw[M];
-    // vector[D2] f2_raw[M];
-    }
+transformed parameters {
+  vector[D] f1[M];
+  vector[D2] f2[M];
+  for (i in 1:M) {
+    f1[i] = f1_mu + f1_raw[i].*f1_sigma;
+    f2[i] = f2_mu + f2_raw[i].*f2_sigma;
+  }
+}
     
-    // transformed parameters {
-    //   vector[D] f1[M];
-    //   vector[D2] f2[M];
-    //     
-    //   for (i in 1:M) {
-    //     f1[i] = f1_mu + f1_raw[i].*f1_sigma;
-    //     f2[i] = f2_mu + f2_raw[i].*f2_sigma;
-    //   }
-    // }
-    
-    model {
-    for (i in 1:M) {
-      real logZ = log_sum_exp(f1[i]'*Yset + f2[i]'*Xset);
-      target +=  YSS[i]'*f1[i] + XSS[i]'*f2[i] - n[i]*logZ;
-      // f1[i] ~ normal(0,1);
-      // f2[i] ~ normal(0,1);
-    }
-    // 
-      // f1 ~ normal(0,1.0);
-      // f2 ~ normal(0,0.5);
-    // f1_sigma ~ normal(0,1); 
-    // f2_sigma ~ normal(0,1);
-    }
+model {
+  for (i in 1:M) {
+    real logZ = log_sum_exp(f1[i]'*Yset + f2[i]'*Xset);
+    target +=  YSS[i]'*f1[i] + XSS[i]'*f2[i] - n[i]*logZ;
+    f1_raw[i] ~ normal(0,1);
+    f2_raw[i] ~ normal(0,1);
+  }
+
+  f1_mu ~ normal(0,1.0);
+  f2_mu ~ normal(0,0.5);
+  f1_sigma ~ normal(0,1);
+  f2_sigma ~ normal(0,1);
+}
     
