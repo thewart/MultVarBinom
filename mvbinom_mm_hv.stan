@@ -26,7 +26,7 @@ functions {
     return Yset;
   }
 }
-  
+
 data {
   int N;    //total number of observations
   int M;    //number of groups
@@ -61,21 +61,24 @@ parameters {
   vector[D] f1_mu;
   vector[D*(D-1)/2] f2_mu;
   vector<lower=0>[D] f1_sigma;
-  vector<lower=0>[D*(D-1)/2] f2_sigma;
-
+  vector<lower=0>[D*(D-1)/2] f2_sigma_raw;
+  real<lower=0> tau_f2_sigma;
+  
   vector[D] f1_raw[M];
   vector[D*(D-1)/2] f2_raw[M];
 }
-    
+
 transformed parameters {
   vector[D] f1[M];
   vector[D*(D-1)/2] f2[M];
+  vector[D*(D-1)/2] f2_sigma = tau_f2_sigma*f2_sigma_raw;
+  
   for (i in 1:M) {
     f1[i] = f1_mu + f1_raw[i].*f1_sigma;
     f2[i] = f2_mu + f2_raw[i].*f2_sigma;
   }
 }
-    
+
 model {
   for (i in 1:M) {
     real logZ = log_sum_exp(f1[i]'*Yset + f2[i]'*Xset);
@@ -83,10 +86,11 @@ model {
     f1_raw[i] ~ normal(0,1);
     f2_raw[i] ~ normal(0,1);
   }
-
+  
   f1_mu ~ normal(0,1.0);
   f2_mu ~ normal(0,0.5);
   f1_sigma ~ normal(0,1);
-  f2_sigma ~ normal(0,1);
+  tau_f2_sigma ~ normal(0,1);
+  f2_sigma_raw ~ normal(0,1);
 }
-    
+

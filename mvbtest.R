@@ -1,6 +1,6 @@
 library(rstan)
 N <- 10000
-M <- 2
+M <- 50
 n <- rep(N/M,M)
 D <- 10
 yset <- do.call(expand.grid,rep(list(c(0,1)),D)) %>% t()
@@ -16,12 +16,15 @@ ycat <- rmultinom(N,1,p)
 y <- yset[,apply(ycat==1,2,which)]
 
 mvb <- stan_model("~/code/MultVarBinom/mvbinom.stan")
-fit <- sampling(mvb,list(Y=y,N=N,D=D),chain=1,iter=100)
-juh <- optimizing(mvb,list(Y=y[,1:5000],N=5000,D=D,D2=2^D),as_vector=F,verbose=T)
-bun <- optimizing(mvb,list(Y=y[,5001:N],N=5000,D=D,D2=2^D),as_vector=F,verbose=T)
+init <- optimizing(mvb,list(Y=y,N=N,D=D,D2=2^D),as_vector=F)$par
 
 mvbm <- stan_model("~/code/MultVarBinom/mvbinom_mm.stan")
-fit <- optimizing(mvbm,list(Y=y,N=N,D=D,D2=2^D,M=M,n=n),as_vector=F,verbose=T)
+fit <- sampling(mvbm,list(Y=y,N=N,D=D,D2=2^D,M=M,n=n),
+                chain=3,cores=3,iter=1000,init=rep(list(init),3),pars=c("f1_raw","f2_raw"),include=F)
+mvbv <- stan_model("~/code/MultVarBinom/mvbinom_mm_hv.stan")
+fit <- sampling(mvbv,list(Y=y,N=N,D=D,D2=2^D,M=M,n=n),
+                chain=3,cores=3,iter=1000,init=rep(list(init),3),pars=c("f1_raw","f2_raw"),include=F)
+
 
 interact <- function(y) {
   D <- length(y);
