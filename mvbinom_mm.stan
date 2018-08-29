@@ -89,4 +89,17 @@ model {
   f1_sigma ~ normal(0,1);
   f2_sigma ~ normal(0,1);
 }
-    
+
+generated quantities {
+  real lp[N];
+  
+  {
+    int start = 1;
+    for (i in 1:M) {
+      int fin = n[i] + start - 1;
+      real logZ = log_sum_exp(f1[i]'*Yset + f2[i]'*Xset);
+      for (j in start:fin) lp[j] = Y[:,j]'*f1[i] + interact(Y[:,j])'*f2[i] - logZ;
+      start = start + n[i];
+    }
+  }
+}
