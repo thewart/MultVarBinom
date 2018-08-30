@@ -19,14 +19,14 @@ functions {
       int ind = i-1;
       
       for (j in 1:D) {
-        Yset[j,i] = fmod(ind,2);
+        Yset[j,i] = 2*(fmod(ind,2)-0.5);
         ind = ind/2;
       }
     }
     return Yset;
   }
 }
-
+  
 data {
   int N;    //total number of observations
   int M;    //number of groups
@@ -34,7 +34,7 @@ data {
   int D2;   //ugh wtf stan this is literally just 2^D but stan will not let that be an integer
   int n[M]; //number of observations per group
   
-  matrix[D,N] Y;    //N D-dimensional data vectors
+  matrix[D,N] Y;    //N D-dimensional binary data vectors
 }
 
 transformed data {
@@ -42,13 +42,14 @@ transformed data {
   vector[D*(D-1)/2] XSS[M];
   matrix[D,D2] Yset;
   matrix[D*(D-1)/2,D2] Xset;
+  matrix[D,N] Yc = 2*(Y-0.5);
   
   {
     int start = 1;
     for (j in 1:M) {  
       XSS[j] = rep_vector(0,D*(D-1)/2);
-      for (i in 1:D) YSS[j][i] = sum(Y[i,start:(start+n[j]-1)]);
-      for (i in start:(start+n[j]-1)) XSS[j] = XSS[j] + interact(Y[:,i]);
+      for (i in 1:D) YSS[j][i] = sum(Yc[i,start:(start+n[j]-1)]);
+      for (i in start:(start+n[j]-1)) XSS[j] = XSS[j] + interact(Yc[:,i]);
       start = start + n[j];
     }
   }
@@ -61,37 +62,29 @@ parameters {
   vector[D] f1_mu;
   vector[D*(D-1)/2] f2_mu;
   vector<lower=0>[D] f1_sigma;
-  vector<lower=0>[D*(D-1)/2] f2_sigma_raw;
-  real<lower=0> tau_f2_sigma;
-  
-  vector[D] f1_raw[M];
-  vector[D*(D-1)/2] f2_raw[M];
-}
 
+  vector[D] f1_raw[M];
+}
+    
 transformed parameters {
   vector[D] f1[M];
   vector[D*(D-1)/2] f2[M];
-  vector[D*(D-1)/2] f2_sigma = tau_f2_sigma*f2_sigma_raw;
-  
   for (i in 1:M) {
     f1[i] = f1_mu + f1_raw[i].*f1_sigma;
-    f2[i] = f2_mu + f2_raw[i].*f2_sigma;
+    f2[i] = f2_mu;
   }
 }
-
+    
 model {
   for (i in 1:M) {
     real logZ = log_sum_exp(f1[i]'*Yset + f2[i]'*Xset);
     target +=  YSS[i]'*f1[i] + XSS[i]'*f2[i] - n[i]*logZ;
     f1_raw[i] ~ normal(0,1);
-    f2_raw[i] ~ normal(0,1);
   }
-  
+
   f1_mu ~ normal(0,5.0);
   f2_mu ~ normal(0,1.0);
   f1_sigma ~ normal(0,1);
-  tau_f2_sigma ~ normal(0,1);
-  f2_sigma_raw ~ normal(0,1);
 }
 
 generated quantities {
@@ -102,7 +95,7 @@ generated quantities {
     for (i in 1:M) {
       int fin = n[i] + start - 1;
       real logZ = log_sum_exp(f1[i]'*Yset + f2[i]'*Xset);
-      for (j in start:fin) lp[j] = Y[:,j]'*f1[i] + interact(Y[:,j])'*f2[i] - logZ;
+      for (j in start:fin) lp[j] = Yc[:,j]'*f1[i] + interact(Yc[:,j])'*f2[i] - logZ;
       start = start + n[i];
     }
   }

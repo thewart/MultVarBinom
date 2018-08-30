@@ -19,7 +19,7 @@ functions {
       int ind = i-1;
       
       for (j in 1:D) {
-        Yset[j,i] = fmod(ind,2);
+        Yset[j,i] = 2*(fmod(ind,2)-0.5);
         ind = ind/2;
       }
     }
@@ -42,13 +42,14 @@ transformed data {
   vector[D*(D-1)/2] XSS[M];
   matrix[D,D2] Yset;
   matrix[D*(D-1)/2,D2] Xset;
+  matrix[D,N] Yc = 2*(Y-0.5);
   
   {
     int start = 1;
     for (j in 1:M) {  
       XSS[j] = rep_vector(0,D*(D-1)/2);
-      for (i in 1:D) YSS[j][i] = sum(Y[i,start:(start+n[j]-1)]);
-      for (i in start:(start+n[j]-1)) XSS[j] = XSS[j] + interact(Y[:,i]);
+      for (i in 1:D) YSS[j][i] = sum(Yc[i,start:(start+n[j]-1)]);
+      for (i in start:(start+n[j]-1)) XSS[j] = XSS[j] + interact(Yc[:,i]);
       start = start + n[j];
     }
   }
@@ -102,7 +103,7 @@ generated quantities {
     for (i in 1:M) {
       int fin = n[i] + start - 1;
       real logZ = log_sum_exp(f1[i]'*Yset + f2[i]'*Xset);
-      for (j in start:fin) lp[j] = Y[:,j]'*f1[i] + interact(Y[:,j])'*f2[i] - logZ;
+      for (j in start:fin) lp[j] = Yc[:,j]'*f1[i] + interact(Yc[:,j])'*f2[i] - logZ;
       start = start + n[i];
     }
   }
