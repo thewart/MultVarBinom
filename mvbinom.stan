@@ -60,10 +60,10 @@ model {
   target +=  YSS'*f1 + XSS'*f2 - N*logZ;
 }
     
-generated quantities {
-  real lp[N];
-  real logZ = log_sum_exp(f1'*Yset + f2'*Xset);
-  
-  for (i in 1:N)
-    lp[i] = Y[:,i]'*f1 + interact(Y[:,i])'*f2 - logZ;
-}
+// generated quantities {
+//   real lp[N];
+//   real logZ = log_sum_exp(f1'*Yset + f2'*Xset);
+//   
+//   for (i in 1:N)
+//     lp[i] = Y[:,i]'*f1 + interact(Y[:,i])'*f2 - logZ;
+// }

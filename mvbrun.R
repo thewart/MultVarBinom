@@ -1,5 +1,10 @@
 # used_obs <- all_obs[all_obs[,length(Observation),by=FocalID][V1>=120,FocalID]]
 # used_obs <- all_obs
+source("~/code/OrdRegMix/messyprep.R")
+
+behaviors = c("SDB","GroomGIVE", "GroomGET","passcont","Approach:initiate(focal)", "Approach:initiate(partner)",
+              "NonConAgg_give","NonConAgg_rec","contactAgg:direct'n(give)","contactAgg:direct'n(receive)")
+
 used_obs <- all_obs[Group=="F" & SEX=="f"]
 Y <- used_obs[,behaviors,with=F] %>% as.matrix() %>% t()
 n <- used_obs[,length(Observation),by=FocalID]$V1
