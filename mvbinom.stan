@@ -19,7 +19,7 @@ functions {
       int ind = i-1;
       
       for (j in 1:D) {
-        Yset[j,i] = 2*(fmod(ind,2)-0.5);
+        Yset[j,i] = 2*fmod(ind,2)-1;
         ind = ind/2;
       }
     }
@@ -42,7 +42,7 @@ transformed data {
   vector[D*(D-1)/2] XSS=rep_vector(0,D*(D-1)/2);
   matrix[D,D2] Yset;
   matrix[D*(D-1)/2,D2] Xset;
-  matrix[D,N] Yc = 2*(Y-0.5);
+  matrix[D,N] Yc = 2*Y-1;
     
   for (i in 1:D) YSS[i] = sum(Yc[i,:]);
   for (i in 1:N) XSS = XSS + interact(Yc[:,i]);

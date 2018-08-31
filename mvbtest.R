@@ -1,36 +1,18 @@
 library(rstan)
-
-source("~/code/OrdRegMix/messyprep.R")
-
-behaviors = c("SDB","GroomGIVE", "GroomGET","passcont","Approach:initiate(focal)", "Approach:initiate(partner)",
-              "NonConAgg_give","NonConAgg_rec","contactAgg:direct'n(give)","contactAgg:direct'n(receive)")
-D <- length(behaviors)
-used_obs <- all_obs[Group=="F" & SEX=="f"]
-Y <- used_obs[,behaviors,with=F] %>% as.matrix() %>% t()
-N <- ncol(Y)
-n <- used_obs[,length(Observation),by=FocalID]$V1
-M <- length(n)
-
+N <- 10000
+M <- 50
+n <- rep(N/M,M)
+D <- 10
 yset <- do.call(expand.grid,rep(list(c(-1,1)),D)) %>% t()
 xset <- apply(yset,2,interact)
+f1 <- rnorm(D)*0.5
+f2 <- rnorm(D*(D-1)/2)*0.25
 
-mvbn <- stan_model("~/code/MultVarBinom/mvbinom_mm_null.stan")
-initfit <- sampling(mvbv,list(Y=Y,N=N,D=D,D2=2^D,M=M,n=n),
-                chain=4,cores=4,iter=650,thin=2,warmup=150,pars=c("f1_raw","f2_raw","f2_sigma_raw"),include=F)
+p <- (t(f1) %*% yset + t(f2) %*% xset) %>% as.vector()
+Z <- sum(exp(p))
+p <- exp(p)/Z
 
-tau_f1_sigma <- 0.5
-tau_f2_sigma <- 0.5
-
-f1 <- init$f1 + f1_sigma*matrix(rnorm(D*M),nrow=D)
-f2 <- init$f2 + f2_sigma*matrix(rnorm(M*D*(D-1)/2),nrow=D*(D-1)/2)
-
-p <- t(yset) %*% f1 + t(xset) %*% f2
-p <- apply(p,2,function(x) exp(x)/sum(exp(x)))
-
-ycat <- matrix(nrow=2^D,ncol=0)
-for (i in 1:M) {
-  ycat <- cbind(ycat,rmultinom(n[i],1,p[,i]))
-}
+ycat <- rmultinom(N,1,p)
 y <- yset[,apply(ycat==1,2,which)]
 y[y==-1] <- 0
 
@@ -40,9 +22,9 @@ init <- optimizing(mvb,list(Y=y,N=N,D=D,D2=2^D),as_vector=F)$par
 mvbm <- stan_model("~/code/MultVarBinom/mvbinom_mm.stan")
 fit <- sampling(mvbm,list(Y=y,N=N,D=D,D2=2^D,M=M,n=n),
                 chain=3,cores=3,iter=1000,init=rep(list(init),3),pars=c("f1_raw","f2_raw"),include=F)
-mvbv <- stan_model("~/code/MultVarBinom/mvbinom_mm_hv_c.stan")
+mvbv <- stan_model("~/code/MultVarBinom/mvbinom_mm_hv.stan")
 fit <- sampling(mvbv,list(Y=y,N=N,D=D,D2=2^D,M=M,n=n),
-                chain=3,cores=3,iter=400,warmup=150,pars=c("f1_raw","f2_raw","f2_sigma_raw"),include=F)
+                chain=3,cores=3,iter=1000,init=rep(list(init),3),pars=c("f1_raw","f2_raw"),include=F)
 
 
 interact <- function(y) {
