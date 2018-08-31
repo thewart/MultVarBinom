@@ -19,7 +19,7 @@ functions {
       int ind = i-1;
       
       for (j in 1:D) {
-        Yset[j,i] = fmod(ind,2);
+        Yset[j,i] = 2*(fmod(ind,2)-0.5);
         ind = ind/2;
       }
     }
@@ -42,9 +42,10 @@ transformed data {
   vector[D*(D-1)/2] XSS=rep_vector(0,D*(D-1)/2);
   matrix[D,D2] Yset;
   matrix[D*(D-1)/2,D2] Xset;
+  matrix[D,N] Yc = 2*(Y-0.5);
     
-  for (i in 1:D) YSS[i] = sum(Y[i,:]);
-  for (i in 1:N) XSS = XSS + interact(Y[:,i]);
+  for (i in 1:D) YSS[i] = sum(Yc[i,:]);
+  for (i in 1:N) XSS = XSS + interact(Yc[:,i]);
   
   Yset = create_Yset(D,D2);
   for (i in 1:D2) Xset[:,i] = interact(Yset[:,i]);
@@ -58,12 +59,15 @@ parameters {
 model {
   real logZ = log_sum_exp(f1'*Yset + f2'*Xset);
   target +=  YSS'*f1 + XSS'*f2 - N*logZ;
+  
+  // f1 ~ normal(0,1.0);
+  // f2 ~ normal(0,0.5);
 }
     
-// generated quantities {
-//   real lp[N];
-//   real logZ = log_sum_exp(f1'*Yset + f2'*Xset);
-//   
-//   for (i in 1:N)
-//     lp[i] = Y[:,i]'*f1 + interact(Y[:,i])'*f2 - logZ;
-// }
+generated quantities {
+  real lp[N];
+  real logZ = log_sum_exp(f1'*Yset + f2'*Xset);
+  
+  for (i in 1:N)
+    lp[i] = Yc[:,i]'*f1 + interact(Yc[:,i])'*f2 - logZ;
+}
