@@ -15,7 +15,7 @@ yset <- do.call(expand.grid,rep(list(c(-1,1)),D)) %>% t()
 xset <- apply(yset,2,interact)
 
 mvbn <- stan_model("~/code/MultVarBinom/mvbinom_mm_null.stan")
-initfit <- sampling(mvbv,list(Y=Y,N=N,D=D,D2=2^D,M=M,n=n),
+initfit <- sampling(mvbn,list(Y=Y,N=N,D=D,D2=2^D,M=M,n=n),
                 chain=4,cores=4,iter=650,thin=2,warmup=150,pars=c("f1_raw","f2_raw","f2_sigma_raw"),include=F)
 
 tau_f1_sigma <- 0.5
