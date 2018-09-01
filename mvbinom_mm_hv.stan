@@ -33,8 +33,10 @@ data {
   int D;    //number of dimensions
   int D2;   //ugh wtf stan this is literally just 2^D but stan will not let that be an integer
   int n[M]; //number of observations per group
+  int P;    //number of regressors
   
   matrix[D,N] Y;    //N D-dimensional data vectors
+  matrix[P,M] X;    //
 }
 
 transformed data {
@@ -65,6 +67,8 @@ parameters {
   vector<lower=0>[D*(D-1)/2] f2_sigma_raw;
   real<lower=0> tau_f2_sigma;
   
+  matrix[P,D] f1_beta;
+  
   vector[D] f1_raw[M];
   vector[D*(D-1)/2] f2_raw[M];
 }
@@ -75,7 +79,7 @@ transformed parameters {
   vector[D*(D-1)/2] f2_sigma = tau_f2_sigma*f2_sigma_raw;
   
   for (i in 1:M) {
-    f1[i] = f1_mu + f1_raw[i].*f1_sigma;
+    f1[i] = f1_mu + X[,i]'*f1_beta + f1_raw[i].*f1_sigma;
     f2[i] = f2_mu + f2_raw[i].*f2_sigma;
   }
 }
