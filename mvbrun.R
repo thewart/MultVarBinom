@@ -19,10 +19,15 @@ mvb <- stan_model("~/code/MultVarBinom/mvbinom.stan")
 mvbn <- stan_model("~/code/MultVarBinom/mvbinom_mm_null.stan")
 mvbv <- stan_model("~/code/MultVarBinom/mvbinom_mm_hv.stan")
 
-fit <- sampling(mvb,list(Y=Y,N=ncol(Y),D=nrow(Y),M=length(n),n=n,D2=2^nrow(Y)),
-                 iter=1000,chains=4,warmup=250,thin=3,include=F,cores=4)
+standat <- list(Y=Y,N=ncol(Y),D=nrow(Y),M=length(n),n=n,D2=2^nrow(Y),X=Xf,P=nrow(Xf))
+
+fit <- sampling(mvb,c(standat,f2_sigma0=1),
+                iter=1000,chains=4,warmup=250,thin=3,include=F,cores=4)
+fit0 <- sampling(mvb,c(standat,f2_sigma0=1e-16),
+                iter=1000,chains=4,warmup=250,thin=3,include=F,cores=4)
 
 standat <- list(Y=Y,N=ncol(Y),D=nrow(Y),M=length(n),n=n,D2=2^nrow(Y),X=Xf,P=nrow(Xf),Z=Xr,R=nrow(Xr))
-
-fitn <- sampling(mvbn,standat,pars=c("f1_u"),iter=1000,warmup=250,thin=3,chains=4,include=F,cores=4)
-fitv <- sampling(mvbv,standat,pars=c("f1_u","f2_u","f2_sigma_raw"),iter=1000,warmup=250,thin=3,chains=4,include=F,cores=4)
+fitn <- sampling(mvbn,standat,pars=c("f1_u"),
+                 iter=1000,warmup=250,thin=3,chains=4,include=F,cores=4)
+fitv <- sampling(mvbv,standat,pars=c("f1_u","f2_u","f2_sigma_raw"),
+                 iter=1000,warmup=250,thin=3,chains=4,include=F,cores=4)
