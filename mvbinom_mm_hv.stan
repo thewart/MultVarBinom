@@ -32,11 +32,13 @@ data {
   int M;    //number of groups
   int D;    //number of dimensions
   int D2;   //ugh wtf stan this is literally just 2^D but stan will not let that be an integer
-  int n[M]; //number of observations per group
+  int n[M]; //number of observations per unique group
   int P;    //number of regressors
+  int R;    //number of groupings for random intercept
   
   matrix[D,N] Y;    //N D-dimensional data vectors
-  matrix[P,M] X;    //
+  matrix[P,M] X;    //fixed-effects design matrix
+  matrix[R,M] Z;    //random effects design matrix
 }
 
 transformed data {
@@ -67,36 +69,36 @@ parameters {
   vector<lower=0>[D*(D-1)/2] f2_sigma_raw;
   real<lower=0> tau_f2_sigma;
   
-  matrix[P,D] f1_beta;
+  matrix[D,P] f1_beta;
   
-  vector[D] f1_raw[M];
-  vector[D*(D-1)/2] f2_raw[M];
+  matrix[D,R] f1_u;
+  matrix[D*(D-1)/2,R] f2_u;
 }
 
 transformed parameters {
-  vector[D] f1[M];
-  vector[D*(D-1)/2] f2[M];
+  matrix[D,M] f1;
+  matrix[D*(D-1)/2,M] f2;
   vector[D*(D-1)/2] f2_sigma = tau_f2_sigma*f2_sigma_raw;
   
-  for (i in 1:M) {
-    f1[i] = f1_mu + X[,i]'*f1_beta + f1_raw[i].*f1_sigma;
-    f2[i] = f2_mu + f2_raw[i].*f2_sigma;
-  }
+  f1 = rep_matrix(f1_mu,M) + f1_beta*X + diag_pre_multiply(f1_sigma,f1_u)*Z;
+  f2 = rep_matrix(f2_mu,M) + diag_pre_multiply(f2_sigma,f2_u)*Z;
 }
 
 model {
   for (i in 1:M) {
-    real logZ = log_sum_exp(f1[i]'*Yset + f2[i]'*Xset);
-    target +=  YSS[i]'*f1[i] + XSS[i]'*f2[i] - n[i]*logZ;
-    f1_raw[i] ~ normal(0,1);
-    f2_raw[i] ~ normal(0,1);
+    real logZ = log_sum_exp(f1[:,i]'*Yset + f2[:,i]'*Xset);
+    target +=  YSS[i]'*f1[:,i] + XSS[i]'*f2[:,i] - n[i]*logZ;
   }
   
   f1_mu ~ normal(0,5.0);
   f2_mu ~ normal(0,1.0);
   f1_sigma ~ normal(0,1);
   tau_f2_sigma ~ normal(0,1);
+  to_vector(f1_beta) ~ normal(0,1);
+  
   f2_sigma_raw ~ normal(0,1);
+  to_vector(f1_u) ~ normal(0,1);
+  to_vector(f2_u) ~ normal(0,1);
 }
 
 generated quantities {
@@ -106,8 +108,8 @@ generated quantities {
     int start = 1;
     for (i in 1:M) {
       int fin = n[i] + start - 1;
-      real logZ = log_sum_exp(f1[i]'*Yset + f2[i]'*Xset);
-      for (j in start:fin) lp[j] = Yc[:,j]'*f1[i] + interact(Yc[:,j])'*f2[i] - logZ;
+      real logZ = log_sum_exp(f1[:,i]'*Yset + f2[:,i]'*Xset);
+      for (j in start:fin) lp[j] = Yc[:,j]'*f1[:,i] + interact(Yc[:,j])'*f2[:,i] - logZ;
       start = start + n[i];
     }
   }
