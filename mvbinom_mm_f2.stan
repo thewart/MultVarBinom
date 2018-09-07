@@ -65,13 +65,11 @@ transformed data {
 parameters {
   vector[D] f1_mu;
   vector[D*(D-1)/2] f2_mu;
-  vector<lower=0>[D] f1_sigma;
   vector<lower=0>[D*(D-1)/2] f2_sigma_raw;
   real<lower=0> tau_f2_sigma;
   
   matrix[D,P] f1_beta;
   
-  matrix[D,R] f1_u;
   matrix[D*(D-1)/2,R] f2_u;
 }
 
@@ -80,7 +78,7 @@ transformed parameters {
   matrix[D*(D-1)/2,M] f2;
   vector[D*(D-1)/2] f2_sigma = tau_f2_sigma*f2_sigma_raw;
   
-  f1 = rep_matrix(f1_mu,M) + f1_beta*X + diag_pre_multiply(f1_sigma,f1_u)*Z;
+  f1 = rep_matrix(f1_mu,M) + f1_beta*X;
   f2 = rep_matrix(f2_mu,M) + diag_pre_multiply(f2_sigma,f2_u)*Z;
 }
 
@@ -92,12 +90,10 @@ model {
   
   f1_mu ~ normal(0,5.0);
   f2_mu ~ normal(0,1.0);
-  f1_sigma ~ normal(0,1);
   tau_f2_sigma ~ normal(0,1);
   to_vector(f1_beta) ~ normal(0,1);
   
   f2_sigma_raw ~ normal(0,1);
-  to_vector(f1_u) ~ normal(0,1);
   to_vector(f2_u) ~ normal(0,1);
 }
 

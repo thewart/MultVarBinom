@@ -37,8 +37,6 @@ data {
   
   matrix[D,N] Y;    //N D-dimensional data vectors
   matrix[P,M] X;    //fixed-effects design matrix
-  
-  real f2_sigma0;   //prior on f2 values
 }
 
 transformed data {
@@ -82,7 +80,7 @@ model {
   }
   
   f1_mu ~ normal(0,5.0);
-  f2 ~ normal(0,f2_sigma0);
+  f2 ~ normal(0,1);
   to_vector(f1_beta) ~ normal(0,1);
 }
 
