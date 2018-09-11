@@ -1,30 +1,38 @@
-fit <- fit_mm
-samps <- extract(fit,pars=c("f1","f2"))
+samps <- extract(fit_mm,pars=c("f1","f2"))
 n <- dim(samps$f1)[1]
 d <- dim(samps$f1)[2]
 m <- dim(samps$f1)[3]
-yset <- make_yset(dim(samps$f1),[2])
-xset <- make_xset(yset)
+yhat <- calc_par(calc_marg,samps$f1,samps$f2,cores = 2)
+mu_std <- apply(yhat,c(1,3),sd)
+ycor <- calc_par(calc_cor,samps$f1,samps$f2)
+cor_std <- apply(ycor,c(1,3),sd)
 
-mu_std <- matrix(nrow=d,ncol=n)
-cor_std <- matrix(nrow=d*(d-1)/2,ncol=n)
-for (i in 1:n) {
-  cat(i,"\r")
-  p <- calc_p(samps$f1[i,,],samps$f2[i,,],yset,xset)
-  yhat <- calc_marg(samps$f1[i,,],samps$f2[i,,],yset,p)
-  ycor <- calc_cor(samps$f1[i,,],samps$f2[i,,],yset,p)
-  mu_std[,i] <- apply(yhat,1,sd)
-  cor_std[,i] <- apply(ycor,1,sd)
-}
+mudat_mm <- make_pltdat(mu_std,label = "mm")
+cordat_mm <- make_pltdat(cor_std,label = "mm")
 
-mudat <- data.table(std=apply(mu_std,1,median),
-           ubi=apply(mu_std,1,quantile,0.1),ubo=apply(mu_std,1,quantile,0.025),
-           lbi=apply(mu_std,1,quantile,0.9),lbo=apply(mu_std,1,quantile,0.975))
-ggplot(mudat,aes(x=std,y=behaviors)) + geom_point(size=2) + 
-  geom_errorbarh(aes(xmin=lbi,xmax=ubi),height=0,size=1.5) + geom_errorbarh(aes(xmin=lbo,xmax=ubo),height=0)
+samps <- extract(fit_mm_f1,pars=c("f1","f2"))
+samps$f2 <- array(samps$f2,dim=c(dim(samps$f2),m))
+yhat <- calc_par(calc_marg,samps$f1,samps$f2,cores=2)
+mu_std <- apply(yhat,c(1,3),sd)
+ycor <- calc_par(calc_cor,samps$f1,samps$f2)
+cor_std <- apply(ycor,c(1,3),sd)
 
-cordat <- data.table(std=apply(cor_std,1,median),
-                    ubi=apply(cor_std,1,quantile,0.1),ubo=apply(cor_std,1,quantile,0.025),
-                    lbi=apply(cor_std,1,quantile,0.9),lbo=apply(cor_std,1,quantile,0.975))
-ggplot(cordat,aes(x=std,y=factor(1:45))) + geom_point(size=2) + 
-  geom_errorbarh(aes(xmin=lbi,xmax=ubi),height=0,size=1.5) + geom_errorbarh(aes(xmin=lbo,xmax=ubo),height=0)
+mudat_f1 <- make_pltdat(mu_std,label="f1")
+cordat_f1 <- make_pltdat(cor_std,label = "f1")
+
+samps <- extract(fit_mm_f2,pars=c("f1","f2"))
+yhat <- calc_par(calc_marg,samps$f1,samps$f2,cores=2)
+mu_std <- apply(yhat,c(1,3),sd)
+ycor <- calc_par(calc_cor,samps$f1,samps$f2)
+cor_std <- apply(ycor,c(1,3),sd)
+
+mudat_f2 <- make_pltdat(mu_std,label="f2")
+cordat_f2 <- make_pltdat(cor_std,label = "f2")
+
+bigdat <- rbindlist(list(cordat_mm,cordat_f1,cordat_f2))
+bigdat[,behav:=behaviors]
+
+mydodge <- position_dodge(width=0.5)
+ggplot(bigdat,aes(y=std,x=rep(factor(1:45),3),color=`label`),position) + geom_point(size=2,position=mydodge) + 
+  # geom_errorbar(aes(ymin=lbi,ymax=ubi),width=0,size=1,position=mydodge) +
+  geom_errorbar(aes(ymin=lbo,ymax=ubo),width=0,position=mydodge) + coord_flip()

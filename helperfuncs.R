@@ -54,3 +54,22 @@ interact <- function(y) {
   return(x);
 }
 
+calc_par <- function(FUN,f1,f2,cores=4) {
+  n <- dim(f1)[1]
+  m <- dim(f1)[3]
+  
+  f1l <- f2l <- list()
+  for (i in 1:n) f1l[[i]] <- f1[i,,]
+  for (i in 1:n) f2l[[i]] <- f2[i,,]
+  
+  out <- mcmapply(FUN,f1l,f2l,mc.cores=cores)
+  
+  d <- nrow(out)/m
+  return(array(out,dim=c(d,m,n)))
+}
+
+make_pltdat <- function(dat,label=NA) {
+  return(data.table(label=label,std=apply(dat,1,median),
+                    ubi=apply(dat,1,quantile,0.1),ubo=apply(dat,1,quantile,0.025),
+                    lbi=apply(dat,1,quantile,0.9),lbo=apply(dat,1,quantile,0.975)))
+}
