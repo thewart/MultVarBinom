@@ -71,8 +71,8 @@ parameters {
   
   matrix[D,P] f1_beta;
   
-  matrix[D,R] f1_u;
-  matrix[D*(D-1)/2,R] f2_u;
+  matrix[D,R] f1_u_raw;
+  matrix[D*(D-1)/2,R] f2_u_raw;
 }
 
 transformed parameters {
@@ -80,8 +80,8 @@ transformed parameters {
   matrix[D*(D-1)/2,M] f2;
   vector[D*(D-1)/2] f2_sigma = tau_f2_sigma*f2_sigma_raw;
   
-  f1 = rep_matrix(f1_mu,M) + f1_beta*X + diag_pre_multiply(f1_sigma,f1_u)*Z;
-  f2 = rep_matrix(f2_mu,M) + diag_pre_multiply(f2_sigma,f2_u)*Z;
+  f1 = rep_matrix(f1_mu,M) + f1_beta*X + diag_pre_multiply(f1_sigma,f1_u_raw)*Z;
+  f2 = rep_matrix(f2_mu,M) + diag_pre_multiply(f2_sigma,f2_u_raw)*Z;
 }
 
 model {
@@ -97,12 +97,15 @@ model {
   to_vector(f1_beta) ~ normal(0,1);
   
   f2_sigma_raw ~ normal(0,1);
-  to_vector(f1_u) ~ normal(0,1);
-  to_vector(f2_u) ~ normal(0,1);
+  to_vector(f1_u_raw) ~ normal(0,1);
+  to_vector(f2_u_raw) ~ normal(0,1);
 }
 
 generated quantities {
   real lp[N];
+  matrix[D,R] f1_u = diag_pre_multiply(f1_sigma,f1_u_raw);
+  matrix[D*(D-1)/2,R] f2_u = diag_pre_multiply(f2_sigma,f2_u_raw);
+
   
   {
     int start = 1;

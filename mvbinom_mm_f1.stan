@@ -69,13 +69,13 @@ parameters {
 
   matrix[D,P] f1_beta;
   
-  matrix[D,R] f1_u;
+  matrix[D,R] f1_u_raw;
 }
 
 transformed parameters {
   matrix[D,M] f1;
 
-  f1 = rep_matrix(f1_mu,M) + f1_beta*X + diag_pre_multiply(f1_sigma,f1_u)*Z;
+  f1 = rep_matrix(f1_mu,M) + f1_beta*X + diag_pre_multiply(f1_sigma,f1_u_raw)*Z;
 }
 
 model {
@@ -89,11 +89,12 @@ model {
   f1_sigma ~ normal(0,1);
   to_vector(f1_beta) ~ normal(0,1);
   
-  to_vector(f1_u) ~ normal(0,1);
+  to_vector(f1_u_raw) ~ normal(0,1);
 }
 
 generated quantities {
   real lp[N];
+  matrix[D,R] f1_u = diag_pre_multiply(f1_sigma,f1_u_raw);
   
   {
     int start = 1;
