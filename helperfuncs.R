@@ -7,9 +7,9 @@ calc_p <- function(f1,f2,yset=make_yset(nrow(f1)),xset=make_xset(yset)) { #f1 mu
   return(apply(eta,2,function(x) exp(x)/sum(exp(x))))
 }
 
-calc_marg <- function(f1,f2,yset=make_yset(nrow(f1)),p=calc_p(f1,f2,yset)) {
-  D <- nrow(f1)
-  N <- ncol(f1)
+calc_marg <- function(p,yset=make_yset(log2(nrow(p)))) {
+  D <- log2(nrow(p))
+  N <- ncol(p)
 
   ymu <- matrix(nrow=D,ncol=N)
   for (i in 1:D) ymu[i,] <- p[yset[i,]==1,] %>% colSums()
@@ -17,21 +17,23 @@ calc_marg <- function(f1,f2,yset=make_yset(nrow(f1)),p=calc_p(f1,f2,yset)) {
   return(ymu)
 }
 
-calc_cor <- function(f1,f2,yset=make_yset(nrow(f1)),p=calc_p(f1,f2,yset)) {
-  D <- nrow(f1)
-  N <- ncol(f1)
+calc_cor <- function(p,yset=make_yset(log2(nrow(p)))) {
+  D <- log2(nrow(p))
+  N <- ncol(p)
   k <- 1
   
   ycor <- matrix(nrow=D*(D-1)/2,ncol=N)
   for (i in 1:(D-1)) {
     for (j in (i+1):D) {
-      p11 <- p[yset[i,]==1 & yset[j,]==1,] %>% colSums()
-      p00 <- p[yset[i,]==-1 & yset[j,]==-1,] %>% colSums()
-      if (i != j) {
-        p01 <- p[yset[i,]==-1 & yset[j,]==1,] %>% colSums()
-        p10 <- p[yset[i,]==1 & yset[j,]==-1,] %>% colSums()
-      } else {
-        p01 <- p10 <- rep(0,N)
+      p11 <- p[yset[i,]==1 & yset[j,]==1,] 
+      p00 <- p[yset[i,]==-1 & yset[j,]==-1,] 
+      p01 <- p[yset[i,]==-1 & yset[j,]==1,] 
+      p10 <- p[yset[i,]==1 & yset[j,]==-1,] 
+      if (D>2) {
+        p11 <- colSums(p11)
+        p00 <- colSums(p00)
+        p01 <- colSums(p01)
+        p10 <- colSums(p10)
       }
       ycor[k,] <- (p11*p00 - p10*p01)/sqrt((p11+p10)*(p00+p01)*(p11+p01)*(p00+p10))
       k <- k + 1
