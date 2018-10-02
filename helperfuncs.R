@@ -75,3 +75,26 @@ make_pltdat <- function(dat,label=NA) {
                     ubi=apply(dat,1,quantile,0.1),ubo=apply(dat,1,quantile,0.025),
                     lbi=apply(dat,1,quantile,0.9),lbo=apply(dat,1,quantile,0.975)))
 }
+
+crossent <- function(q,p) {
+  s <- p*log(q)
+  return( -colSums(p*log(q)) )
+}
+
+match_marg <- function(p,yset=make_yset(log2(nrow(p)))) {
+  yset[yset==-1] <- 0
+  mup <- calc_marg(p,yset)
+  return( exp(t(yset) %*% log(mup) + t(!yset) %*% log(1-mup)) )
+}
+
+calc_repeat <- function(p) {
+  D0 <- crossent(p,rowMeans(p)) %>% mean()
+  D <- crossent(p,p) %>% mean()
+  return( (D0-D)/D0 )
+}
+
+calc_repeat_marg <- function(p) {
+  D0 <- crossent(p,rowMeans(p)) %>% mean()
+  D <- crossent(p,match_marg(p)) %>% mean()
+  return( (D0-D)/D0 )
+}
