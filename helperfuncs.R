@@ -30,10 +30,17 @@ calc_cor <- function(p,yset=make_yset(log2(nrow(p)))) {
       p01 <- p[yset[i,]==-1 & yset[j,]==1,] 
       p10 <- p[yset[i,]==1 & yset[j,]==-1,] 
       if (D>2) {
-        p11 <- colSums(p11)
-        p00 <- colSums(p00)
-        p01 <- colSums(p01)
-        p10 <- colSums(p10)
+        if (N>1) {
+          p11 <- colSums(p11)
+          p00 <- colSums(p00)
+          p01 <- colSums(p01)
+          p10 <- colSums(p10)
+        } else {
+          p11 <- sum(p11)
+          p00 <- sum(p00)
+          p01 <- sum(p01)
+          p10 <- sum(p10)
+        }
       }
       ycor[k,] <- (p11*p00 - p10*p01)/sqrt((p11+p10)*(p00+p01)*(p11+p01)*(p00+p10))
       k <- k + 1
