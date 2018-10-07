@@ -17,6 +17,11 @@ calc_marg <- function(p,yset=make_yset(log2(nrow(p)))) {
   return(ymu)
 }
 
+calc_marg_f <- function(f1,f2,yset=make_yset(nrow(f1))) {
+  p <- calc_p(f1,f2,yset)
+  return(calc_marg(p,yset))
+}
+
 calc_cor <- function(p,yset=make_yset(log2(nrow(p)))) {
   D <- log2(nrow(p))
   N <- ncol(p)
@@ -49,6 +54,11 @@ calc_cor <- function(p,yset=make_yset(log2(nrow(p)))) {
   return(ycor)
 }
 
+calc_cor_f <- function(f1,f2,yset=make_yset(nrow(f1))) {
+  p <- calc_p(f1,f2,yset)
+  return(calc_cor(p,yset))
+}
+
 interact <- function(y) {
   D = length(y)
   x <- vector(length=D*(D-1)/2)
@@ -63,7 +73,7 @@ interact <- function(y) {
   return(x);
 }
 
-calc_par <- function(FUN,f1,f2,cores=4) {
+calc_par_f <- function(FUN,f1,f2,cores=4) {
   n <- dim(f1)[1]
   m <- dim(f1)[3]
   
@@ -77,13 +87,24 @@ calc_par <- function(FUN,f1,f2,cores=4) {
   return(array(out,dim=c(d,m,n)))
 }
 
+calc_par <- function(FUN,p,cores=4) { #p dim: c(states, observations, samples)
+  n <- dim(p)[3] #number of samples
+  m <- dim(p)[2] #number of animals
+  
+  pl <- list()
+  for (i in 1:n) pl[[i]] <- p[,,i]
+  
+  out <- mclapply(pl,FUN,mc.cores=cores)
+  
+}
+
 make_pltdat <- function(dat,label=NA) {
   return(data.table(label=label,std=apply(dat,1,median),
                     ubi=apply(dat,1,quantile,0.1),ubo=apply(dat,1,quantile,0.025),
                     lbi=apply(dat,1,quantile,0.9),lbo=apply(dat,1,quantile,0.975)))
 }
 
-crossent <- function(q,p) {
+crossent <- function(p,q) {
   s <- p*log(q)
   return( -colSums(p*log(q)) )
 }
@@ -94,8 +115,8 @@ match_marg <- function(p,yset=make_yset(log2(nrow(p)))) {
   return( exp(t(yset) %*% log(mup) + t(!yset) %*% log(1-mup)) )
 }
 
-calc_repeat <- function(p) {
-  D0 <- crossent(p,rowMeans(p)) %>% mean()
+calc_repeat <- function(p,mu=rowMeans(p)) {
+  D0 <- crossent(p,mu) %>% mean()
   D <- crossent(p,p) %>% mean()
   return( (D0-D)/D0 )
 }

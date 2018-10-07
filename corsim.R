@@ -35,7 +35,7 @@ corsd=vector()
 mupsd=vector()
 for (i in 1:length(musd)) {
   cat(i,"\r")
-  p <- simp(2,musd[i],rhosd[i],mu=-0.84,n=2000)
+  p <- simp(2,musd[i],rhosd[i],mu=-0.84,n=1000)
   p[p<0.001] <- 0.001
   p <- p/colSums(p)
   r2frac[i] <- (calc_repeat(p) - calc_repeat_marg(p))/calc_repeat(p)
@@ -44,7 +44,9 @@ for (i in 1:length(musd)) {
 }
 musdl <- rep(c(0.05,0.1,0.2),each=length(rhosd)/3)
 cordat <- data.table(r2frac,corsd,musdl)
-ggplot(cordat[corsd<=0.4],aes(y=r2frac,x=corsd,color=ordered(musdl))) + geom_line() + coord_cartesian(ylim=c(0,1))
+corplt <- ggplot(cordat[corsd<=0.4],aes(y=r2frac,x=corsd,color=ordered(musdl))) + geom_line() + 
+  coord_cartesian(ylim=c(0,1)) + xlab("Correlation SD") + ylab("% Repeatability") + 
+  scale_color_discrete("Average SD")
 
 #identify 0.1 point for various d ----
 # d <- rep(2:6,each=6)
@@ -83,4 +85,8 @@ for (i in 1:length(d)) {
   mupsd[i] <- calc_marg(p) %>% sd()
 }
 ddat <- data.table(r2frac=c(0,r2frac),d=c(1,d))
-ggplot(ddat,aes(y=r2frac,x=d)) + geom_line() + geom_point() + coord_cartesian(ylim=c(0,1))
+color <- ggplot_build(corplt)$data[[1]]$colour %>% unique
+dimplt <- ggplot(ddat,aes(y=r2frac,x=d)) + geom_line(color=color[2]) + coord_cartesian(ylim=c(0,1)) +
+  scale_x_continuous("Number of behaviors",breaks=1:6,labels=as.character(1:6),minor_breaks = NULL) + ylab("% Repeatability")
+
+

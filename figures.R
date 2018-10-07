@@ -9,7 +9,7 @@ for (i in 1:n) {
   f2[i,,] <- samps$f2_mu[i,] + samps$f2_u[i,,]
 }
 
-yhat <- calc_par(calc_marg,f1,f2,cores = 4)
+yhat <- calc_par(calc_marg_f,f1,f2,cores = 6)
 mu_std <- apply(yhat,c(1,3),sd)
 ycor <- calc_par(calc_cor,f1,f2)
 cor_std <- apply(ycor,c(1,3),sd)
@@ -54,3 +54,5 @@ mydodge <- position_dodge(width=0.5)
 ggplot(bigdat,aes(y=std,x=behav,color=`label`),position) + geom_point(size=2,position=mydodge) + 
   # geom_errorbar(aes(ymin=lbi,ymax=ubi),width=0,size=1,position=mydodge) +
   geom_errorbar(aes(ymin=lbo,ymax=ubo),width=0,position=mydodge) + coord_flip()
+
+
