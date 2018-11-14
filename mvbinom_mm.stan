@@ -90,11 +90,11 @@ model {
     target +=  YSS[i]'*f1[:,i] + XSS[i]'*f2[:,i] - n[i]*logZ;
   }
   
-  f1_mu ~ normal(0,5.0);
-  f2_mu ~ normal(0,1.0);
+  f1_mu ~ normal(0,5);
+  f2_mu ~ normal(0,1);
   f1_sigma ~ normal(0,1);
   tau_f2_sigma ~ normal(0,1);
-  to_vector(f1_beta) ~ normal(0,1);
+  to_vector(f1_beta) ~ normal(0,5);
   
   f2_sigma_raw ~ normal(0,1);
   to_vector(f1_u_raw) ~ normal(0,1);

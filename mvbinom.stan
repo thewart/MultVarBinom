@@ -81,7 +81,7 @@ model {
   
   f1_mu ~ normal(0,5.0);
   f2 ~ normal(0,1);
-  to_vector(f1_beta) ~ normal(0,1);
+  to_vector(f1_beta) ~ normal(0,5.0);
 }
 
 generated quantities {
