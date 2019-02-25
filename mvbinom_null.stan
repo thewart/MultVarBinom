@@ -47,6 +47,7 @@ transformed data {
   matrix[D,D2] Yset;
   matrix[D*(D-1)/2,D2] Xset;
   matrix[D,N] Yc = 2*Y-1;
+  vector[D*(D-1)/2] f2 = rep_vector(0,D*(D-1)/2);
   
   {
     int start = 1;
@@ -64,12 +65,10 @@ transformed data {
 
 parameters {
   vector[D] f1_mu;
-  vector[D*(D-1)/2] f2;
   vector<lower=0>[D] f1_sigma;
   cholesky_factor_corr[D] f1_L;
 
   matrix[D,P] f1_beta;
-  
   matrix[D,R] f1_u_raw;
 }
 
@@ -85,8 +84,11 @@ model {
     target +=  YSS[i]'*f1[:,i] + XSS[i]'*f2 - n[i]*logZ;
   }
   
+  f1_mu ~ normal(0,5.0);
+  // f2 ~ normal(0,1);
+  to_vector(f1_beta) ~ normal(0,5.0);
+
   f1_mu ~ normal(0,5);
-  f2 ~ normal(0,1.0);
   f1_sigma ~ normal(0,1);
   to_vector(f1_beta) ~ normal(0,5);
   f1_L ~ lkj_corr_cholesky(2);
@@ -98,6 +100,7 @@ generated quantities {
   real lp[N];
   matrix[D,R] f1_u = diag_pre_multiply(f1_sigma,f1_L)*f1_u_raw;
   corr_matrix[D] f1_rho = f1_L*f1_L';
+
   
   {
     int start = 1;
