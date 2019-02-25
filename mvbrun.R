@@ -2,9 +2,9 @@
 # used_obs <- all_obs
 library(standardize)
 library(shinystan) ##somehow prevents crashing on parallel chains in R 3.5?
-modonsex <- F
+modonsex <- T
 modonkin <- F
-modonrank <- F
+modonrank <- T
 source("~/code/OrdRegMix/collectcleanfocaldata.R")
 source("~/code/OrdRegMix/loadcovariates.R")
 source("~/code/OrdRegMix/tabulatefocaldata.R")
@@ -22,11 +22,12 @@ mvb_mm <- stan_model("~/code/MultVarBinom/mvbinom_mm.stan")
 mvb_mm_f1 <- stan_model("~/code/MultVarBinom/mvbinom_mm_f1.stan")
 # mvb_mm_f2 <- stan_model("~/code/MultVarBinom/mvbinom_mm_f2.stan")
 
-standat <- list(Y=t(used_obs[,behaviors,with=F]),N=nrow(Y),D=d,M=length(n),n=n,D2=2^ncol(Y),X=t(Xf),P=ncol(Xf))
-niter <- 350
+standat <- list(Y=t(used_obs[,behaviors,with=F]),N=nrow(used_obs),
+                D=d,M=length(n),n=n,D2=2^d,X=t(Xf),P=ncol(Xf))
+niter <- 400
 nwp <- 150
 nthin <- 2
-nchain <- 5
+nchain <- 4
 
 fit0 <- sampling(mvb,standat,
                  iter=niter,warmup=nwp,thin=nthin,chains=nchain,cores=nchain)
@@ -34,7 +35,7 @@ fit0 <- sampling(mvb,standat,
 standat <- c(standat,list(Z=t(Xr),R=ncol(Xr)))
 # fit_mm_f2 <- sampling(mvb_mm_f2,standat,pars=c("f2_u_raw","f2_sigma_raw"),
 #                       iter=700,warmup=200,thin=2,chains=nchain,include=F,cores=nchain)
-fit_mm_f1 <- sampling(mvb_mm_f1,standat,pars=c("f1_u_raw"),include=F,
+fit_mm_f1 <- sampling(mvb_mm_f1,standat,pars=c("f1_u_raw","f1_L"),include=F,
                       iter=niter,warmup=nwp,thin=nthin,chains=nchain,cores=nchain,control=list(max_treedepth=12))
-fit_mm <- sampling(mvb_mm,standat,pars=c("f1_u_raw","f2_u_raw","f2_sigma_raw"),include=F,
+fit_mm <- sampling(mvb_mm,standat,pars=c("f1_u_raw","f2_u_raw","f2_sigma_raw","f1_L"),include=F,
                    iter=niter,warmup=nwp,thin=nthin,chains=nchain,cores=nchain,control=list(max_treedepth=12))
