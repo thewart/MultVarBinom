@@ -140,7 +140,8 @@ match_marg <- function(p,yset=make_yset(log2(nrow(p)))) {
   return( exp(t(yset) %*% log(mup) + t(!yset) %*% log(1-mup)) )
 }
 
-calc_mi <- function(p,mu=rowMeans(p),normalize=T) {
+calc_mi <- function(p,normalize=T) {
+  mu <- rowMeans(p)
   D0 <- -sum(mu*log(mu))
   D <- crossent(p,p) %>% mean()
   mi <- D0-D
@@ -149,7 +150,8 @@ calc_mi <- function(p,mu=rowMeans(p),normalize=T) {
 }
 
 calc_mi_marg <- function(p,normalize=T) {
-  D0 <- crossent(p,rowMeans(p)) %>% mean()
+  pmarg <- match_marg(p)
+  D0 <- -sum(rowMeans(p)*log(rowMeans(pmarg)))
   D <- crossent(p,match_marg(p)) %>% mean()
   mi <- D0-D
   if (normalize) mi <- mi/D0
